@@ -16,5 +16,6 @@ rootRouter.get("/api/data", controller.index);
 //address
 rootRouter.get("/api/data/address", controller.getAddress);
 rootRouter.post("/api/data/address/:addressId", controller.updateAddress);
-
+rootRouter.post("/api/data/address", controller.createAddress);
+rootRouter.delete("/api/data/address/:addressId", controller.deleteAddress);
 module.exports = rootRouter;

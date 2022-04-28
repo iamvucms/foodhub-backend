@@ -37,15 +37,24 @@ module.exports.Address = {
             }
             if (selected) {
               db.run(
-                `UPDATE addresses SET selected=0 WHERE user_id = ?;
-                UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
-                [user_id, user_id],
+                `UPDATE addresses SET selected=0 WHERE user_id = ?;`,
+                [user_id],
                 function (err) {
                   if (err) {
                     console.log({ err });
                     return reject(`Something went wrong`);
                   }
-                  resolve(true);
+                  db.run(
+                    `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
+                    [user_id],
+                    function (err) {
+                      if (err) {
+                        console.log({ err });
+                        return reject(`Something went wrong`);
+                      }
+                      resolve(true);
+                    }
+                  );
                 }
               );
             } else {
@@ -132,7 +141,7 @@ module.exports.Address = {
       });
     });
   },
-  deleteAddress: function ({ address_id, user_id, is_selected }) {
+  deleteAddress: function ({ address_id, user_id }) {
     return new Promise((resolve, reject) => {
       db.serialize(async () => {
         db.run(
@@ -143,24 +152,50 @@ module.exports.Address = {
               console.log({ err });
               return reject(`Something went wrong`);
             }
-            if (is_selected) {
-              db.run(
-                `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
-                [user_id],
-                function (err) {
-                  if (err) {
-                    console.log({ err });
-                    return reject(`Something went wrong`);
-                  }
+            db.get(
+              "SELECT count(id) from addresses WHERE user_id=? AND selected=1",
+              [user_id],
+              function (err, row) {
+                if (err) {
+                  console.log({ err });
+                  return reject(`Something went wrong`);
+                }
+                console.log({ row });
+                if (row["count(id)"] === 0) {
+                  db.run(
+                    `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
+                    [user_id],
+                    function (err) {
+                      if (err) {
+                        console.log({ err });
+                        return reject(`Something went wrong`);
+                      }
+                      resolve(true);
+                    }
+                  );
+                } else {
                   resolve(true);
                 }
-              );
-            } else {
-              resolve(true);
-            }
+              }
+            );
           }
         );
       });
+    });
+  },
+  getLatestAddress: function (user_id) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM addresses WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+        [user_id],
+        function (err, row) {
+          if (err) {
+            console.log({ err });
+            return reject();
+          }
+          resolve(row);
+        }
+      );
     });
   },
 };

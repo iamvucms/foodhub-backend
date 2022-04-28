@@ -116,15 +116,55 @@ module.exports = {
   },
   updateAddress: async function (req, res) {
     try {
+      const userId = await User.emailToUserId(req.user.email);
       const { address } = req.body || {};
       const addressId = req.params.addressId;
       const updated = await Address.updateAddress({
         address_id: addressId,
+        user_id: userId,
         ...address,
       });
       res.json({
         success: updated,
         // data: address,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  createAddress: async function (req, res) {
+    try {
+      const { address } = req.body || {};
+      const userId = await User.emailToUserId(req.user.email);
+      const created = await Address.addAddress({
+        ...address,
+        user_id: userId,
+      });
+      const addressList = await Address.getAddressByUserId(userId);
+      res.json({
+        success: created,
+        data: addressList,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  deleteAddress: async function (req, res) {
+    try {
+      const userId = await User.emailToUserId(req.user.email);
+      const addressId = req.params.addressId;
+      const deleted = await Address.deleteAddress({
+        address_id: addressId,
+        user_id: userId,
+      });
+      res.json({
+        success: deleted,
       });
     } catch (e) {
       res.json({
