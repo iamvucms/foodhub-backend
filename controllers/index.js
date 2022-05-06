@@ -2,6 +2,8 @@ const { User } = require("../models/user.model");
 const { OTP } = require("../models/otp.model");
 const { generateAccessToken } = require("../utils");
 const { Address } = require("../models/address.model");
+const { Product } = require("../models/product.model");
+const { Review } = require("../models/review.model");
 const tokenList = {};
 module.exports = {
   index: function (req, res) {
@@ -173,4 +175,57 @@ module.exports = {
       });
     }
   },
+  getProducts: async function (req, res) {
+    try {
+      const { page = 0, limit = 10 } = req.query;
+      const products = await Product.getProducts({ page, limit });
+      res.json({
+        success: true,
+        data: products,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  getProductDetail: async function (req, res) {
+    try {
+      const { productId } = req.params;
+      const product = await Product.getProductById(productId);
+      res.json({
+        success: true,
+        data: product,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  getProductReviews: async function (req, res) {
+    try {
+      const { productId } = req.params;
+      const reviews = await Review.getReviewsByProductId(productId);
+      res.json({
+        success: true,
+        data: reviews,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+
+  getRestaurants: async function (req, res) {},
+  getRestaurantDetail: async function (req, res) {},
+  getRestaurantProducts: async function (req, res) {},
+  getRestaurantReviews: async function (req, res) {},
+
+  getCategories: async function (req, res) {},
+  getCategoryProducts: async function (req, res) {},
 };

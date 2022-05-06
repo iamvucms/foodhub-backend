@@ -18,4 +18,31 @@ rootRouter.get("/api/data/address", controller.getAddress);
 rootRouter.post("/api/data/address/:addressId", controller.updateAddress);
 rootRouter.post("/api/data/address", controller.createAddress);
 rootRouter.delete("/api/data/address/:addressId", controller.deleteAddress);
+//product
+rootRouter.get("/api/data/products", controller.getProducts);
+rootRouter.get("/api/data/products/:productId", controller.getProductDetail);
+rootRouter.get(
+  "/api/data/products/:productId/reviews",
+  controller.getProductReviews
+);
+//restaurant
+rootRouter.get("/api/data/restaurants", controller.getRestaurants);
+rootRouter.get(
+  "/api/data/restaurants/:restaurantId",
+  controller.getRestaurantDetail
+);
+rootRouter.get(
+  "/api/data/restaurants/:restaurantId/products",
+  controller.getRestaurantProducts
+);
+rootRouter.get(
+  "/api/data/restaurants/:restaurantId/reviews",
+  controller.getRestaurantReviews
+);
+//categories
+rootRouter.get("/api/data/categories", controller.getCategories);
+rootRouter.get(
+  "/api/data/categories/:categoryId/products",
+  controller.getCategoryProducts
+);
 module.exports = rootRouter;

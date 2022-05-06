@@ -1,7 +1,5 @@
-const { response } = require("express");
 const { mailer } = require("../utils/mailer");
 const db = require("./");
-const { User } = require("./user.model");
 module.exports.OTP = {
   createOTPForUser: function (user_id, emailOrPhone) {
     return new Promise((resolve, reject) => {
