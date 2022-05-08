@@ -16,7 +16,7 @@ module.exports.Address = {
       );
     });
   },
-  addAddress: function ({
+  createAddress: function ({
     user_id,
     name,
     phone_number,

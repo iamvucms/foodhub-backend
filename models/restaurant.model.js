@@ -11,7 +11,11 @@ module.exports.Restaurant = {
             console.log({ err });
             return reject();
           }
-          resolve(rows);
+          const results = rows.map((row) => ({
+            ...row,
+            verified: row.verified === 1,
+          }));
+          resolve(results);
         }
       );
     });
@@ -28,15 +32,17 @@ module.exports.Restaurant = {
           }
           if (row) {
             //get summary of reviews
-            db.all(
-              "SELECT * FROM reviews WHERE res_id = ?",
+            db.get(
+              "SELECT avg(rating) as avg_rating, count(id) as total_reviews FROM reviews WHERE res_id = ? GROUP BY res_id",
               [id],
-              function (err, rows) {
+              function (err, review) {
                 if (err) {
                   console.log({ err });
                   return reject();
                 }
-                row.reviews = rows;
+                row.avg_rating = review.avg_rating;
+                row.total_reviews = review.total_reviews;
+                row.verified = row.verified === 1;
                 resolve(row);
               }
             );

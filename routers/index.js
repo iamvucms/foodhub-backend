@@ -1,11 +1,23 @@
 const express = require("express");
+const multer = require("multer");
 const rootRouter = express.Router();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads");
+  },
+  filename: (req, file, cb) => {
+    const extension = file.mimetype.split("/")[1];
+    const fileId = `${Math.random()}${Math.random()}`;
+    cb(null, fileId + "." + extension);
+  },
+});
+const upload = multer({ storage });
 const controller = require("../controllers/index.js");
 const {
   authenticateTokenMiddleware,
   fakeLaggyMiddleware,
 } = require("./middleware.js");
-rootRouter.use("/", fakeLaggyMiddleware);
+// rootRouter.use("/", fakeLaggyMiddleware);
 rootRouter.post("/api/auth", controller.authenticate);
 rootRouter.post("/api/auth/register", controller.register);
 rootRouter.get("/api/auth/refresh-token", controller.refreshToken);
@@ -25,6 +37,12 @@ rootRouter.get(
   "/api/data/products/:productId/reviews",
   controller.getProductReviews
 );
+rootRouter.post("/api/data/products", controller.createProduct);
+rootRouter.post("/api/data/products/:productId", controller.updateProduct);
+rootRouter.delete("/api/data/products/:productId", controller.deleteProduct);
+//product addons
+rootRouter.post("/api/data/addons/:addOnId", controller.updateProductAddon);
+rootRouter.delete("/api/data/addons/:addOnId", controller.deleteProductAddon);
 //restaurant
 rootRouter.get("/api/data/restaurants", controller.getRestaurants);
 rootRouter.get(
@@ -45,4 +63,17 @@ rootRouter.get(
   "/api/data/categories/:categoryId/products",
   controller.getCategoryProducts
 );
+//photo upload
+rootRouter.post(
+  "/api/data/photo",
+  upload.single("photo"),
+  controller.uploadPhoto
+);
+rootRouter.post(
+  "/api/data/photos",
+  upload.array("photos", 5),
+  controller.uploadMultiplePhotos
+);
+rootRouter.delete("/api/data/photos/:filename", controller.deletePhoto);
+rootRouter.get("/uploads/:filename", controller.getPhoto);
 module.exports = rootRouter;
