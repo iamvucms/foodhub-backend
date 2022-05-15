@@ -9,6 +9,7 @@ const { Category } = require("../models/category.model");
 const { ProductAddons } = require("../models/product_addons.model");
 const path = require("path");
 const fs = require("fs");
+const { Order } = require("../models/order.model");
 const tokenList = {};
 module.exports = {
   index: function (req, res) {
@@ -18,6 +19,7 @@ module.exports = {
     const { emailOrPhone, password } = req.body || {};
     const user = await User.getUser(emailOrPhone, password);
     if (user) {
+      const restaurant = await Restaurant.getRestaurantById(user.id);
       const accessToken = generateAccessToken(emailOrPhone);
       const refreshToken = generateAccessToken(emailOrPhone, true);
       tokenList[refreshToken] = {
@@ -30,6 +32,7 @@ module.exports = {
           user_id: user.id,
           accessToken,
           refreshToken,
+          restaurant,
         },
       });
     } else {
@@ -371,7 +374,61 @@ module.exports = {
       });
     }
   },
-
+  createRestaurant: async function (req, res) {
+    try {
+      const { ...restaurant } = req.body || {};
+      const userId = await User.emailToUserId(req.user.email);
+      if (
+        !restaurant.name ||
+        !restaurant.logo ||
+        !restaurant.address ||
+        !restaurant.cover_image ||
+        !restaurant.delivery_fee
+      ) {
+        throw new Error("Missing required fields");
+      }
+      const created = await Restaurant.createRestaurant({
+        userId,
+        restaurant,
+      });
+      if (created) {
+        const createdRestaurant = await Restaurant.getLatestRestaurant();
+        res.json({
+          success: true,
+          data: createdRestaurant,
+        });
+      } else {
+        throw new Error("Something went wrong");
+      }
+    } catch (e) {
+      console.log(e);
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  updateRestaurant: async function (req, res) {
+    try {
+      const { restaurantId } = req.params;
+      const { ...restaurant } = req.body || {};
+      if (Object.keys(restaurant).length === 0) {
+        throw new Error("Missing required fields");
+      }
+      const updated = await Restaurant.updateRestaurant({
+        restaurant,
+        restaurantId,
+      });
+      res.json({
+        success: updated,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
   getCategories: async function (_, res) {
     try {
       const categories = await Category.getCategories();
@@ -502,6 +559,96 @@ module.exports = {
         "../uploads/" + req.params.filename
       );
       res.sendFile(photoPath);
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  //orders controllers
+  getUserOrders: async function (req, res) {
+    try {
+      const userId = await User.emailToUserId(req.user.email);
+      const { limit = 10, page = 0 } = req.query;
+      const orders = await Order.getOrdersByUserId({
+        userId,
+        limit,
+        page,
+      });
+      res.json({
+        success: true,
+        data: orders,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  getRestaurantOrders: async function (req, res) {
+    try {
+      const restaurantId = await User.emailToRestaurantId(req.user.email);
+      const { limit = 10, page = 0, status } = req.query;
+      if (restaurantId) {
+        const orders = await Order.getOrdersByRestaurantId({
+          restaurantId,
+          page,
+          limit,
+          status,
+        });
+        res.json({
+          success: true,
+          data: orders,
+        });
+      }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  createOrder: async function (req, res) {
+    try {
+      const { products, address } = req.body || {};
+      const userId = await User.emailToUserId(req.user.email);
+      if (!products || !address) {
+        throw new Error("Missing required fields");
+      }
+      const resIds = [];
+      products.forEach((product) => {
+        if (!resIds.includes(product.res_id)) {
+          resIds.push(product.res_id);
+        }
+      });
+      const created = await Order.createOrder({
+        userId,
+        address,
+        products,
+      });
+      if (created) {
+        const orders = await Order.getLatestOrderByUserId({
+          userId,
+          limit: resIds.length,
+        });
+        res.json({
+          success: true,
+          data: orders,
+        });
+      } else {
+        throw new Error("Something went wrong");
+      }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  updateOrder: async function (req, res) {
+    try {
     } catch (e) {
       res.json({
         success: false,

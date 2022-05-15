@@ -57,6 +57,11 @@ rootRouter.get(
   "/api/data/restaurants/:restaurantId/reviews",
   controller.getRestaurantReviews
 );
+rootRouter.post("/api/data/restaurants", controller.createRestaurant);
+rootRouter.post(
+  "/api/data/restaurants/:restaurantId",
+  controller.updateRestaurant
+);
 //categories
 rootRouter.get("/api/data/categories", controller.getCategories);
 rootRouter.get(
@@ -76,4 +81,9 @@ rootRouter.post(
 );
 rootRouter.delete("/api/data/photos/:filename", controller.deletePhoto);
 rootRouter.get("/uploads/:filename", controller.getPhoto);
+//orders
+rootRouter.get("/api/data/orders", controller.getUserOrders);
+rootRouter.get("/api/data/restaurant/orders", controller.getRestaurantOrders);
+rootRouter.post("/api/data/orders", controller.createOrder);
+rootRouter.post("/api/data/orders/:orderId", controller.updateOrder);
 module.exports = rootRouter;

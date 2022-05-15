@@ -34,6 +34,23 @@ module.exports.User = {
       );
     });
   },
+  emailToRestaurantId: function (email) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id FROM restaurants WHERE owner_id = (SELECT id FROM users WHERE emailOrPhone = "${email}")`,
+        function (err, row) {
+          if (err) {
+            return reject(err);
+          }
+          if (row) {
+            resolve(row.id);
+          } else {
+            reject("Restaurant not found");
+          }
+        }
+      );
+    });
+  },
   getUserByUserId: function (user_id) {
     return new Promise((resolve, reject) => {
       db.get(

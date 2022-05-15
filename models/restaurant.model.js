@@ -40,13 +40,86 @@ module.exports.Restaurant = {
                   console.log({ err });
                   return reject();
                 }
-                row.avg_rating = review.avg_rating;
-                row.total_reviews = review.total_reviews;
                 row.verified = row.verified === 1;
                 resolve(row);
               }
             );
           } else reject();
+        }
+      );
+    });
+  },
+  createRestaurant: function ({ userId, restaurant }) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "INSERT INTO restaurants (name, logo, address, cover_image,delivery_fee, owner_id) VALUES (?,?,?,?,?,?)",
+        [
+          restaurant.name,
+          restaurant.logo,
+          restaurant.address,
+          restaurant.cover_image,
+          restaurant.delivery_fee,
+          userId,
+        ],
+        function (err) {
+          if (err) {
+            console.log({ err });
+            return reject("Something went wrong");
+          }
+          resolve(true);
+        }
+      );
+    });
+  },
+  getLatestRestaurant: function () {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM restaurants ORDER BY id DESC LIMIT 1",
+        function (err, row) {
+          if (err) {
+            console.log({ err });
+            return reject("Something went wrong");
+          }
+          resolve(row);
+        }
+      );
+    });
+  },
+  getRestaurantByUserId: function (userId) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM restaurants WHERE owner_id = ?",
+        [userId],
+        function (err, row) {
+          if (err) {
+            console.log({ err });
+            return reject("Something went wrong");
+          }
+          resolve(row);
+        }
+      );
+    });
+  },
+  updateRestaurant: function ({ restaurantId, restaurant }) {
+    return new Promise((resolve, reject) => {
+      const dataString = [];
+      const data = [];
+      for (const key in restaurant) {
+        if (key !== "id") {
+          dataString.push(`${key}=?`);
+          data.push(restaurant[key]);
+        }
+      }
+      data.push(restaurantId);
+      db.run(
+        "UPDATE restaurants SET " + dataString + " WHERE id=?",
+        data,
+        function (err) {
+          if (err) {
+            console.log({ err });
+            return reject("Something went wrong");
+          }
+          resolve(true);
         }
       );
     });
