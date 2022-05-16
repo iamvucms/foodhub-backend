@@ -1,12 +1,18 @@
 const db = require("./");
 const md5 = require("md5");
 const { ProductAddons } = require("./product_addons.model");
+const { Database } = require("../utils/query");
 module.exports.Product = {
-  getProducts: function ({ limit = 10, page = 0 }) {
+  getProducts: function ({
+    limit = 10,
+    page = 0,
+    orderBy = "avg_rating",
+    orderType = "DESC",
+  }) {
     return new Promise((resolve, reject) => {
       db.all(
-        `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews
-          FROM products left join reviews ON(products.id=reviews.product_id) GROUP BY products.id LIMIT ? OFFSET ?`,
+        `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews,categories.name as category_name
+          FROM products left join reviews ON(products.id=reviews.product_id) left join categories ON(categories.id=products.cat_id) GROUP BY products.id ORDER BY ${orderBy} ${orderType} LIMIT ? OFFSET ?`,
         [limit, page * limit],
         function (err, rows) {
           if (err) {
@@ -64,10 +70,19 @@ module.exports.Product = {
       );
     });
   },
-  getProductsByRestaurantId: function ({ resId, limit = 10, page = 0 }) {
+  getProductsByRestaurantId: function ({
+    resId,
+    limit = 10,
+    page = 0,
+    orderBy = "avg_rating",
+    orderType = "DESC",
+    categoryId,
+  }) {
     return new Promise((resolve, reject) => {
       db.all(
-        `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM products left join reviews ON(products.id=reviews.product_id) WHERE products.res_id = ? GROUP BY products.id LIMIT ? OFFSET ?`,
+        `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews,categories.name as category_name FROM products left join reviews ON(products.id=reviews.product_id) left join categories ON(categories.id=products.cat_id)  WHERE products.res_id = ? ${
+          !!categoryId ? "AND products.cat_id=" + categoryId : ""
+        } GROUP BY products.id ORDER BY ${orderBy} ${orderType} LIMIT ? OFFSET ?`,
         [resId, limit, page * limit],
         function (err, rows) {
           if (err) {
@@ -147,7 +162,6 @@ module.exports.Product = {
     orderType = "ASC",
   }) {
     return new Promise((resolve, reject) => {
-      console.log(`${orderBy} ${orderType}`);
       db.all(
         `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM products left join reviews ON(products.id=reviews.product_id) WHERE products.cat_id = ? GROUP BY products.id ORDER BY ${orderBy} ${orderType} LIMIT ? OFFSET ?`,
         [catId, limit, page * limit],
@@ -185,9 +199,9 @@ module.exports.Product = {
       );
     });
   },
-  createProduct: function (product) {
-    return new Promise((resolve, reject) => {
-      db.run(
+  createProduct: async function (product) {
+    try {
+      await Database.run(
         "INSERT INTO products (name,description,price,image,cat_id,res_id) VALUES (?,?,?,?,?,?)",
         [
           product.name,
@@ -196,19 +210,16 @@ module.exports.Product = {
           product.image,
           product.res_id,
           product.cat_id,
-        ],
-        function (err) {
-          if (err) {
-            console.log(err);
-            reject(err);
-          }
-          resolve(true);
-        }
+        ]
       );
-    });
+      return true;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
   },
-  updateProduct: function ({ productId, product }) {
-    return new Promise((resolve, reject) => {
+  updateProduct: async function ({ productId, product }) {
+    try {
       const dataString = [];
       const data = [];
       for (const key in product) {
@@ -217,17 +228,14 @@ module.exports.Product = {
           data.push(product[key]);
         }
       }
-      db.run(
+      await Database.run(
         "UPDATE products SET " + dataString.join(", ") + " WHERE id = ?",
-        [...data, productId],
-        function (err) {
-          if (err) {
-            reject(err);
-          }
-          resolve(true);
-        }
+        [...data, productId]
       );
-    });
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
   },
   deleteProduct: function (productId) {
     return new Promise((resolve, reject) => {

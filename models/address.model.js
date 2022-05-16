@@ -1,22 +1,19 @@
 const db = require(".");
+const { Database } = require("../utils/query");
 module.exports.Address = {
-  getAddressByUserId: function (user_id) {
-    console.log({ user_id });
-    return new Promise((resolve, reject) => {
-      db.all(
+  getAddressByUserId: async function (user_id) {
+    try {
+      const addresses = await Database.all(
         "SELECT * FROM addresses WHERE user_id = ?",
-        [user_id],
-        function (err, rows) {
-          if (err) {
-            console.log({ err });
-            return reject();
-          }
-          resolve(rows || []);
-        }
+        [user_id]
       );
-    });
+      return addresses || [];
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
   },
-  createAddress: function ({
+  createAddress: async function ({
     user_id,
     name,
     phone_number,
@@ -25,45 +22,26 @@ module.exports.Address = {
     province,
     selected,
   }) {
-    return new Promise((resolve, reject) => {
-      db.serialize(async () => {
-        db.run(
-          "INSERT INTO addresses (user_id, name, phone_number, street, district, province) VALUES (?, ?, ?, ?, ?,?)",
-          [user_id, name, phone_number, street, district, province],
-          function (err) {
-            if (err) {
-              console.log({ err });
-              return reject(`Something went wrong`);
-            }
-            if (selected) {
-              db.run(
-                `UPDATE addresses SET selected=0 WHERE user_id = ?;`,
-                [user_id],
-                function (err) {
-                  if (err) {
-                    console.log({ err });
-                    return reject(`Something went wrong`);
-                  }
-                  db.run(
-                    `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
-                    [user_id],
-                    function (err) {
-                      if (err) {
-                        console.log({ err });
-                        return reject(`Something went wrong`);
-                      }
-                      resolve(true);
-                    }
-                  );
-                }
-              );
-            } else {
-              resolve(true);
-            }
-          }
+    try {
+      await Database.run(
+        "INSERT INTO addresses (user_id, name, phone_number, street, district, province) VALUES (?, ?, ?, ?, ?,?)",
+        [user_id, name, phone_number, street, district, province]
+      );
+      if (selected) {
+        await Database.run(
+          `UPDATE addresses SET selected=0 WHERE user_id = ?;`,
+          [user_id]
         );
-      });
-    });
+        await Database.run(
+          `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
+          [user_id]
+        );
+      }
+      return true;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
   },
   updateAddress: function ({
     address_id,
@@ -141,47 +119,24 @@ module.exports.Address = {
       });
     });
   },
-  deleteAddress: function ({ address_id, user_id }) {
-    return new Promise((resolve, reject) => {
-      db.serialize(async () => {
-        db.run(
-          "DELETE FROM addresses WHERE id = ?",
-          [address_id],
-          function (err) {
-            if (err) {
-              console.log({ err });
-              return reject(`Something went wrong`);
-            }
-            db.get(
-              "SELECT count(id) from addresses WHERE user_id=? AND selected=1",
-              [user_id],
-              function (err, row) {
-                if (err) {
-                  console.log({ err });
-                  return reject(`Something went wrong`);
-                }
-                console.log({ row });
-                if (row["count(id)"] === 0) {
-                  db.run(
-                    `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
-                    [user_id],
-                    function (err) {
-                      if (err) {
-                        console.log({ err });
-                        return reject(`Something went wrong`);
-                      }
-                      resolve(true);
-                    }
-                  );
-                } else {
-                  resolve(true);
-                }
-              }
-            );
-          }
+  deleteAddress: async function ({ address_id, user_id }) {
+    try {
+      await Database.run("DELETE FROM addresses WHERE id = ?", [address_id]);
+      const count = await Database.get(
+        "SELECT count(id) from addresses WHERE user_id=? AND selected=1",
+        [user_id]
+      );
+      if (count["count(id)"] === 0) {
+        await Database.run(
+          `UPDATE addresses SET selected=1 WHERE id=(SELECT id FROM addresses WHERE user_id=? ORDER BY id DESC LIMIT 1 )`,
+          [user_id]
         );
-      });
-    });
+      }
+      return true;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
   },
   getLatestAddress: function (user_id) {
     return new Promise((resolve, reject) => {

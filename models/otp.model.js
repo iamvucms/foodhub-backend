@@ -1,8 +1,8 @@
 const { mailer } = require("../utils/mailer");
-const db = require("./");
+const { Database } = require("../utils/query");
 module.exports.OTP = {
-  createOTPForUser: function (user_id, emailOrPhone) {
-    return new Promise((resolve, reject) => {
+  createOTPForUser: async function (user_id, emailOrPhone) {
+    try {
       const otp = Math.floor(Math.random() * 10000);
       //send otp to email
       // mailer.sendMail({
@@ -11,37 +11,26 @@ module.exports.OTP = {
       //   subject: "Sending Email using Node.js",
       //   text: "That was easy!",
       // });
-      db.serialize(() => {
-        db.run(
-          "INSERT INTO otp (user_id, code) VALUES (?, ?)",
-          [user_id, otp],
-          function (err) {
-            if (err) {
-              console.log({ err });
-              return reject(false);
-            }
-            resolve(true);
-          }
-        );
-      });
-    });
+      await Database.run("INSERT INTO otp (user_id, code) VALUES (?, ?)", [
+        user_id,
+        otp,
+      ]);
+      return true;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
   },
-  checkOTP: function (user_id, otp) {
-    return new Promise((resolve, reject) => {
-      db.serialize(() => {
-        db.get(
-          "SELECT count(*) FROM otp WHERE user_id = ? AND code = ?",
-          [user_id, otp],
-          function (err, row) {
-            if (err) {
-              console.log("err", err);
-              return reject("OTP is not correct");
-            }
-            const isExist = row["count(*)"] > 0;
-            resolve(isExist);
-          }
-        );
-      });
-    });
+  checkOTP: async function (user_id, otp) {
+    try {
+      const isExist = await Database.get(
+        "SELECT count(*) FROM otp WHERE user_id = ? AND code = ?",
+        [user_id, otp]
+      );
+      return isExist["count(*)"] > 0;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
   },
 };

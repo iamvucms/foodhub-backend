@@ -1,24 +1,38 @@
 const db = require("./");
 const md5 = require("md5");
+const { Database } = require("../utils/query");
 module.exports.Restaurant = {
-  getRestaurants: function ({ limit = 10, page = 0 }) {
-    return new Promise((resolve, reject) => {
-      db.all(
-        "SELECT * FROM restaurants LIMIT ? OFFSET ?",
-        [limit, page * limit],
-        function (err, rows) {
-          if (err) {
-            console.log({ err });
-            return reject();
-          }
-          const results = rows.map((row) => ({
-            ...row,
-            verified: row.verified === 1,
-          }));
-          resolve(results);
-        }
+  getRestaurants: async function ({ limit = 10, page = 0 }) {
+    try {
+      const rows = await Database.all(
+        "SELECT restaurants.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM restaurants left join reviews ON(reviews.res_id=restaurants.id) GROUP BY res_id ORDER BY avg_rating DESC LIMIT ? OFFSET ?",
+        [limit, page * limit]
       );
-    });
+      const restaurantIds = rows.map((row) => row.id);
+      const categories = await Database.all(
+        "SELECT GROUP_CONCAT(categories.name ||'|'|| categories.id) as categories,res_id FROM products inner join categories ON(products.cat_id=categories.id) WHERE res_id IN (" +
+          restaurantIds.join(",") +
+          ") GROUP BY res_id"
+      );
+      const categoriesMap = {};
+      categories.forEach((category) => {
+        categoriesMap[category.res_id] = Array.from(
+          new Set(category.categories.split(","))
+        ).map((x) => {
+          const [name, id] = x.split("|");
+          return { name, id };
+        });
+      });
+      const results = rows.map((row) => ({
+        ...row,
+        verified: row.verified === 1,
+        food_categories: categoriesMap[row.id] || [],
+      }));
+      return results;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
   },
   getRestaurantById: function (id) {
     return new Promise((resolve, reject) => {

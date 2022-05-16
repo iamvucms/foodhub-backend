@@ -227,5 +227,27 @@ module.exports.Order = {
       throw new Error("Something went wrong");
     }
   },
+  updateOrder: async function ({ userId, orderId, order }) {
+    try {
+      const data = [];
+      const dataString = [];
+      Object.keys(order).forEach((key) => {
+        if (key !== "id") {
+          data.push(order[key]);
+          dataString.push(key + " = ?");
+        }
+      });
+      await Database.run(
+        "UPDATE orders SET " +
+          dataString.join(",") +
+          " WHERE id = ? AND user_id = ?",
+        [...data, orderId, userId]
+      );
+      return true;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
+  },
   getLatestOrderIdByUserId,
 };

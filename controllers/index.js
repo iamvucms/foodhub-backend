@@ -213,26 +213,6 @@ module.exports = {
       });
     }
   },
-  getProductReviews: async function (req, res) {
-    try {
-      const { productId } = req.params;
-      const { limit = 10, page = 0 } = req.query;
-      const reviews = await Review.getReviewsByProductId({
-        productId,
-        limit,
-        page,
-      });
-      res.json({
-        success: true,
-        data: reviews,
-      });
-    } catch (e) {
-      res.json({
-        success: false,
-        error: e,
-      });
-    }
-  },
   createProduct: async function (req, res) {
     try {
       const { product, addons = [] } = req.body || {};
@@ -337,35 +317,16 @@ module.exports = {
   getRestaurantProducts: async function (req, res) {
     try {
       const { restaurantId } = req.params;
-      const { limit = 10, page = 0 } = req.query;
+      const { limit = 10, page = 0, categoryId } = req.query;
       const products = await Product.getProductsByRestaurantId({
         resId: restaurantId,
         page,
         limit,
+        categoryId,
       });
       res.json({
         success: true,
         data: products,
-      });
-    } catch (e) {
-      res.json({
-        success: false,
-        error: e,
-      });
-    }
-  },
-  getRestaurantReviews: async function (req, res) {
-    try {
-      const { restaurantId } = req.params;
-      const { limit = 10, page = 0 } = req.query;
-      const reviews = await Review.getReviewsByRestaurantId({
-        resId: restaurantId,
-        page,
-        limit,
-      });
-      res.json({
-        success: true,
-        data: reviews,
       });
     } catch (e) {
       res.json({
@@ -649,6 +610,146 @@ module.exports = {
   },
   updateOrder: async function (req, res) {
     try {
+      const { orderId } = req.params;
+      const { ...order } = req.body || {};
+      const userId = await User.emailToUserId(req.user.email);
+      if (Object.keys(order).length === 0) {
+        throw new Error("Missing required fields");
+      } else {
+        const updated = await Order.updateOrder({
+          orderId,
+          order,
+          userId,
+        });
+        res.json({
+          success: updated,
+        });
+      }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  //review controllers
+  createRestaurantReview: async function (req, res) {
+    try {
+      const { restaurantId } = req.params;
+      const userId = await User.emailToUserId(req.user.email);
+      const { review, orderId } = req.body || {};
+      if (Object.keys(review).length === 0) {
+        throw new Error("Missing required fields");
+      } else {
+        const created = await Review.createReview({
+          orderId,
+          review,
+          userId,
+          restaurantId,
+        });
+        if (created) {
+          const review = await Review.getLatestReview({
+            orderId,
+          });
+          res.json({
+            success: true,
+            data: review,
+          });
+        } else {
+          throw new Error("Something went wrong");
+        }
+      }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  createProductReview: async function (req, res) {
+    try {
+      const { productId } = req.params;
+      const userId = await User.emailToUserId(req.user.email);
+      const { review, orderId } = req.body || {};
+      if (Object.keys(review).length === 0) {
+        throw new Error("Missing required fields");
+      } else {
+        const created = await Review.createReview({
+          orderId,
+          review,
+          userId,
+          productId,
+        });
+        if (created) {
+          const review = await Review.getLatestReview({
+            orderId,
+          });
+          res.json({
+            success: true,
+            data: review,
+          });
+        } else {
+          throw new Error("Something went wrong");
+        }
+      }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  deleteReview: async function (req, res) {
+    try {
+      const { reviewId } = req.params;
+      const userId = await User.emailToUserId(req.user.email);
+      const deleted = await Review.deleteReview({
+        reviewId,
+        userId,
+      });
+      res.json({
+        success: deleted,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  getProductReviews: async function (req, res) {
+    try {
+      const { productId } = req.params;
+      const { limit = 10, page = 0 } = req.query;
+      const reviews = await Review.getReviewsByProductId({
+        productId,
+        limit,
+        page,
+      });
+      res.json({
+        success: true,
+        data: reviews,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  getRestaurantReviews: async function (req, res) {
+    try {
+      const { restaurantId } = req.params;
+      const { limit = 10, page = 0 } = req.query;
+      const reviews = await Review.getReviewsByRestaurantId({
+        resId: restaurantId,
+        page,
+        limit,
+      });
+      res.json({
+        success: true,
+        data: reviews,
+      });
     } catch (e) {
       res.json({
         success: false,

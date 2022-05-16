@@ -1,3 +1,4 @@
+const { Database } = require("../utils/query");
 const db = require("./");
 module.exports.Review = {
   getReviewsByProductId: function ({ productId, limit = 10, page = 0 }) {
@@ -30,5 +31,56 @@ module.exports.Review = {
         }
       );
     });
+  },
+  createReview: async function ({
+    review,
+    userId,
+    orderId,
+    restaurantId,
+    productId,
+  }) {
+    try {
+      const timestamp = new Date().getTime();
+      await Database.run(
+        "INSERT INTO reviews (content,rating,reviewer_id,product_id,order_id,res_id,created_at) VALUES (?,?,?,?,?,?,?)",
+        [
+          review.content,
+          review.rating,
+          userId,
+          productId,
+          orderId,
+          restaurantId,
+          timestamp,
+        ]
+      );
+      return true;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
+  },
+  getLatestReview: async function ({ orderId }) {
+    try {
+      const review = await Database.get(
+        `SELECT reviews.*,name as reviewer_name,avatar as reviewer_avatar FROM reviews inner join users ON(reviews.reviewer_id=users.id) WHERE order_id = ? order by reviews.id DESC LIMIT 1`,
+        [orderId]
+      );
+      return review;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
+  },
+  deleteReview: async function ({ reviewId, userId }) {
+    try {
+      await Database.run(
+        "DELETE FROM reviews WHERE id = ? AND reviewer_id = ?",
+        [reviewId, userId]
+      );
+      return true;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
   },
 };

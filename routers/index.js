@@ -33,10 +33,7 @@ rootRouter.delete("/api/data/address/:addressId", controller.deleteAddress);
 //product
 rootRouter.get("/api/data/products", controller.getProducts);
 rootRouter.get("/api/data/products/:productId", controller.getProductDetail);
-rootRouter.get(
-  "/api/data/products/:productId/reviews",
-  controller.getProductReviews
-);
+
 rootRouter.post("/api/data/products", controller.createProduct);
 rootRouter.post("/api/data/products/:productId", controller.updateProduct);
 rootRouter.delete("/api/data/products/:productId", controller.deleteProduct);
@@ -53,10 +50,7 @@ rootRouter.get(
   "/api/data/restaurants/:restaurantId/products",
   controller.getRestaurantProducts
 );
-rootRouter.get(
-  "/api/data/restaurants/:restaurantId/reviews",
-  controller.getRestaurantReviews
-);
+
 rootRouter.post("/api/data/restaurants", controller.createRestaurant);
 rootRouter.post(
   "/api/data/restaurants/:restaurantId",
@@ -86,4 +80,22 @@ rootRouter.get("/api/data/orders", controller.getUserOrders);
 rootRouter.get("/api/data/restaurant/orders", controller.getRestaurantOrders);
 rootRouter.post("/api/data/orders", controller.createOrder);
 rootRouter.post("/api/data/orders/:orderId", controller.updateOrder);
+//reviews
+rootRouter.post(
+  "/api/data/restaurants/:restaurantId/reviews",
+  controller.createRestaurantReview
+);
+rootRouter.post(
+  "/api/data/products/:productId/reviews",
+  controller.createProductReview
+);
+rootRouter.get(
+  "/api/data/restaurants/:restaurantId/reviews",
+  controller.getRestaurantReviews
+);
+rootRouter.get(
+  "/api/data/products/:productId/reviews",
+  controller.getProductReviews
+);
+rootRouter.delete("/api/data/reviews/:reviewId", controller.deleteReview);
 module.exports = rootRouter;
