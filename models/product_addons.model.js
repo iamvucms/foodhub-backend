@@ -41,7 +41,6 @@ module.exports.ProductAddons = {
           data.push(addon[key]);
         }
       }
-      console.log({ addOnId });
       db.run(
         "UPDATE product_addons SET " + dataString.join(",") + " WHERE id = ?",
         [...data, addOnId],

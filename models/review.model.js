@@ -2,7 +2,6 @@ const { Database } = require("../utils/query");
 const db = require("./");
 module.exports.Review = {
   getReviewsByProductId: function ({ productId, limit = 10, page = 0 }) {
-    console.log({ productId, limit, page });
     return new Promise((resolve, reject) => {
       db.all(
         "SELECT * FROM reviews WHERE product_id = ? LIMIT ? OFFSET ?",
