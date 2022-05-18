@@ -15,10 +15,19 @@ const getLatestOrderIdByUserId = async function (userId, restaurantId) {
   }
 };
 module.exports.Order = {
-  getOrdersByUserId: async function ({ userId, limit = 10, page = 0 }) {
+  getOrdersByUserId: async function ({
+    userId,
+    limit = 10,
+    page = 0,
+    isHistory = false,
+  }) {
     try {
       const orders = await Database.all(
-        "SELECT orders.*,restaurants.name as restaurant_name,restaurants.logo as restaurant_logo FROM orders inner join restaurants ON(orders.res_id=restaurants.id) WHERE orders.user_id = ? ORDER BY orders.id DESC LIMIT ? OFFSET ?",
+        `SELECT orders.*,restaurants.name as restaurant_name,restaurants.logo as restaurant_logo FROM orders inner join restaurants ON(orders.res_id=restaurants.id) WHERE orders.user_id = ? AND status_code ${
+          isHistory
+            ? `>= ${OrderStatus.DELIVERED}`
+            : `< ${OrderStatus.DELIVERED}`
+        } ORDER BY orders.id DESC LIMIT ? OFFSET ?`,
         [userId, limit, limit * page]
       );
       const orderIds = orders.map((row) => row.id).join(",");
@@ -113,7 +122,7 @@ module.exports.Order = {
       throw new Error("Something went wrong");
     }
   },
-  createOrder: async function ({ userId, products, address }) {
+  createOrder: async function ({ userId, products, address, paymentMethod }) {
     try {
       //group products by restaurant_id
       const productsByRestaurant = {};
@@ -143,7 +152,7 @@ module.exports.Order = {
             taxFeePercentage * productPrice;
           const timestamp = new Date().getTime();
           await Database.run(
-            "INSERT INTO orders (user_id,address_text,status_code,delivery_fee,res_id,total_price,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO orders (user_id,address_text,status_code,delivery_fee,res_id,total_price,payment_method,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
             [
               userId,
               address,
@@ -151,6 +160,7 @@ module.exports.Order = {
               restaurant.delivery_fee,
               restaurantId,
               totalPrice,
+              paymentMethod,
               timestamp,
               timestamp,
             ]
@@ -237,11 +247,12 @@ module.exports.Order = {
           dataString.push(key + " = ?");
         }
       });
+      const updatedAt = new Date().getTime();
       await Database.run(
         "UPDATE orders SET " +
           dataString.join(",") +
-          " WHERE id = ? AND user_id = ?",
-        [...data, orderId, userId]
+          ",updated_at=? WHERE id = ? AND user_id = ?",
+        [...data, updatedAt, orderId, userId]
       );
       return true;
     } catch (e) {

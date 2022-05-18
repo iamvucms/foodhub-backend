@@ -37,6 +37,7 @@ rootRouter.get("/api/data/products/:productId", controller.getProductDetail);
 rootRouter.post("/api/data/products", controller.createProduct);
 rootRouter.post("/api/data/products/:productId", controller.updateProduct);
 rootRouter.delete("/api/data/products/:productId", controller.deleteProduct);
+rootRouter.post("/api/data/suggest-products", controller.getSuggestProducts);
 //product addons
 rootRouter.post("/api/data/addons/:addOnId", controller.updateProductAddon);
 rootRouter.delete("/api/data/addons/:addOnId", controller.deleteProductAddon);

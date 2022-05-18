@@ -48,6 +48,64 @@ module.exports.Product = {
       );
     });
   },
+  getSuggestProducts: async function ({
+    limit = 10,
+    page = 0,
+    categoryIds = [],
+    restaurantIds = [],
+    skipProductIds,
+  }) {
+    try {
+      const categoryString = categoryIds.join(",");
+      const restaurantString = restaurantIds.join(",");
+      const skipProductString = skipProductIds.join(",");
+      const rows = await Database.all(
+        `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews,categories.name as category_name
+            FROM products left join reviews ON(products.id=reviews.product_id) left join categories ON(categories.id=products.cat_id) ${
+              categoryIds.length + restaurantIds.length > 0
+                ? `WHERE ${
+                    categoryIds.length > 0
+                      ? `products.cat_id IN(${categoryString})`
+                      : ""
+                  } ${
+                    categoryIds.length > 0 && restaurantIds.length > 0
+                      ? `AND`
+                      : ""
+                  } ${
+                    restaurantIds.length > 0
+                      ? `products.res_id IN(${restaurantString})`
+                      : ""
+                  } ${
+                    skipProductIds.length > 0
+                      ? ` AND products.id NOT IN(${skipProductString})`
+                      : ""
+                  }`
+                : ""
+            } GROUP BY products.id ORDER BY avg_rating DESC,total_reviews DESC LIMIT ? OFFSET ?`,
+        [limit, page * limit]
+      );
+      const productIds = rows.map((row) => row.id).join(",");
+      const addons = await Database.all(
+        "SELECT * FROM product_addons WHERE product_id IN (" + productIds + ")"
+      );
+      const addonJson = {};
+      addons.forEach((addon) => {
+        if (addonJson[addon.product_id]) {
+          addonJson[addon.product_id].push(addon);
+        } else {
+          addonJson[addon.product_id] = [addon];
+        }
+      });
+      const results = rows.map((x) => ({
+        ...x,
+        options: addonJson[x.id] || [],
+      }));
+      return results;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
+  },
   getProductById: function (productId) {
     return new Promise((resolve, reject) => {
       db.get(

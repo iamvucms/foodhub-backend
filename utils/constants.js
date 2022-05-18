@@ -2,11 +2,12 @@ module.exports = {
   OrderStatus: {
     PENDING: 1,
     CONFIRMED: 2,
-    PREPARED: 3,
-    DELIVERING: 4,
-    DELIVERED: 4,
-    REJECTED: 5,
-    CANCELLED: 6,
+    PREPARING: 3,
+    PREPARED: 4,
+    DELIVERING: 5,
+    DELIVERED: 6,
+    REJECTED: 7,
+    CANCELLED: 8,
   },
   taxFeePercentage: 0.1,
 };

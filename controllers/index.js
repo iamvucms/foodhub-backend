@@ -198,6 +198,28 @@ module.exports = {
       });
     }
   },
+  getSuggestProducts: async function (req, res) {
+    try {
+      const { page = 0, limit = 10 } = req.query;
+      const { categoryIds, restaurantIds, skipProductIds } = req.body || {};
+      const suggestProducts = await Product.getSuggestProducts({
+        categoryIds,
+        restaurantIds,
+        skipProductIds,
+        page,
+        limit,
+      });
+      return res.json({
+        success: true,
+        data: suggestProducts,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
   getProductDetail: async function (req, res) {
     try {
       const { productId } = req.params;
@@ -531,11 +553,12 @@ module.exports = {
   getUserOrders: async function (req, res) {
     try {
       const userId = await User.emailToUserId(req.user.email);
-      const { limit = 10, page = 0 } = req.query;
+      const { limit = 10, page = 0, history = 0 } = req.query;
       const orders = await Order.getOrdersByUserId({
         userId,
         limit,
         page,
+        isHistory: parseInt(history) === 1,
       });
       res.json({
         success: true,
@@ -573,7 +596,7 @@ module.exports = {
   },
   createOrder: async function (req, res) {
     try {
-      const { products, address } = req.body || {};
+      const { products, address, paymentMethod } = req.body || {};
       const userId = await User.emailToUserId(req.user.email);
       if (!products || !address) {
         throw new Error("Missing required fields");
@@ -588,6 +611,7 @@ module.exports = {
         userId,
         address,
         products,
+        paymentMethod,
       });
       if (created) {
         const orders = await Order.getLatestOrderByUserId({
@@ -602,6 +626,7 @@ module.exports = {
         throw new Error("Something went wrong");
       }
     } catch (e) {
+      console.log(e);
       res.json({
         success: false,
         error: e,
