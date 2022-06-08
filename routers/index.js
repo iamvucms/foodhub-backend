@@ -20,11 +20,13 @@ const {
 // rootRouter.use("/", fakeLaggyMiddleware);
 rootRouter.post("/api/auth", controller.authenticate);
 rootRouter.post("/api/auth/register", controller.register);
-rootRouter.get("/api/auth/refresh-token", controller.refreshToken);
+rootRouter.post("/api/auth/refresh-token", controller.refreshToken);
 rootRouter.post("/api/auth/verify-otp", controller.verifyOTP);
 
 rootRouter.use("/api/data", authenticateTokenMiddleware);
 rootRouter.get("/api/data", controller.index);
+//user
+rootRouter.post("/api/data/user", controller.updateUser);
 //address
 rootRouter.get("/api/data/address", controller.getAddress);
 rootRouter.post("/api/data/address/:addressId", controller.updateAddress);

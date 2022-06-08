@@ -66,6 +66,7 @@ module.exports = {
   },
   refreshToken: function (req, res) {
     const { emailOrPhone, refreshToken } = req.body || {};
+    console.log(refreshToken, emailOrPhone, tokenList);
     if (emailOrPhone && refreshToken in tokenList) {
       const accessToken = generateAccessToken(emailOrPhone);
       res.json({
@@ -76,7 +77,10 @@ module.exports = {
       });
       tokenList[refreshToken].accessToken = accessToken;
     } else {
-      res.sendStatus(401);
+      res.json({
+        success: false,
+        error: "Invalid email or password",
+      });
     }
   },
   verifyOTP: async function (req, res) {
@@ -102,6 +106,30 @@ module.exports = {
       } else {
         throw new Error("Invalid OTP");
       }
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
+  updateUser: async function (req, res) {
+    try {
+      const { name, avatar, password } = req.body || {};
+      const userId = await User.emailToUserId(req.user.email);
+      const user = await User.updateUser({
+        user_id: userId,
+        name,
+        avatar,
+        password,
+      });
+      res.json({
+        success: true,
+        data: {
+          ...user,
+          user_id: user.id,
+        },
+      });
     } catch (e) {
       res.json({
         success: false,
