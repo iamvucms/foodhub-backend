@@ -8,11 +8,12 @@ module.exports.Product = {
     page = 0,
     orderBy = "avg_rating",
     orderType = "DESC",
+    q = "",
   }) {
     return new Promise((resolve, reject) => {
       db.all(
         `SELECT products.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews,categories.name as category_name
-          FROM products left join reviews ON(products.id=reviews.product_id) left join categories ON(categories.id=products.cat_id) GROUP BY products.id ORDER BY ${orderBy} ${orderType} LIMIT ? OFFSET ?`,
+          FROM products left join reviews ON(products.id=reviews.product_id) left join categories ON(categories.id=products.cat_id) WHERE products.name LIKE '%${q}%' GROUP BY products.id ORDER BY ${orderBy} ${orderType} LIMIT ? OFFSET ?`,
         [limit, page * limit],
         function (err, rows) {
           if (err) {

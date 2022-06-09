@@ -213,8 +213,14 @@ module.exports = {
   },
   getProducts: async function (req, res) {
     try {
-      const { page = 0, limit = 10 } = req.query;
-      const products = await Product.getProducts({ page, limit });
+      const { page = 0, limit = 10, q, orderBy, orderType } = req.query;
+      const products = await Product.getProducts({
+        page,
+        limit,
+        q,
+        orderBy,
+        orderType,
+      });
       res.json({
         success: true,
         data: products,
@@ -336,8 +342,8 @@ module.exports = {
   //end product controllers
   getRestaurants: async function (req, res) {
     try {
-      const { page = 0, limit = 10 } = req.query;
-      const restaurants = await Restaurant.getRestaurants({ page, limit });
+      const { page = 0, limit = 10, q } = req.query;
+      const restaurants = await Restaurant.getRestaurants({ page, limit, q });
       res.json({
         success: true,
         data: restaurants,
@@ -388,13 +394,14 @@ module.exports = {
   createRestaurant: async function (req, res) {
     try {
       const { ...restaurant } = req.body || {};
+      console.log(restaurant);
       const userId = await User.emailToUserId(req.user.email);
       if (
         !restaurant.name ||
         !restaurant.logo ||
         !restaurant.address ||
         !restaurant.cover_image ||
-        !restaurant.delivery_fee
+        isNaN(restaurant.delivery_fee)
       ) {
         throw new Error("Missing required fields");
       }
@@ -457,13 +464,14 @@ module.exports = {
   getCategoryProducts: async function (req, res) {
     try {
       const { categoryId } = req.params;
-      const { limit = 10, page = 0, orderType, orderBy } = req.query;
+      const { limit = 10, page = 0, orderType, orderBy, q } = req.query;
       const products = await Product.getProductsByCategoryId({
         catId: categoryId,
         page,
         limit,
         orderBy,
         orderType,
+        q,
       });
       res.json({
         success: true,

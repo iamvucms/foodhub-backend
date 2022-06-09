@@ -2,10 +2,10 @@ const db = require("./");
 const md5 = require("md5");
 const { Database } = require("../utils/query");
 module.exports.Restaurant = {
-  getRestaurants: async function ({ limit = 10, page = 0 }) {
+  getRestaurants: async function ({ limit = 10, page = 0, q = "" }) {
     try {
       const rows = await Database.all(
-        "SELECT restaurants.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM restaurants left join reviews ON(reviews.res_id=restaurants.id) GROUP BY res_id ORDER BY avg_rating DESC LIMIT ? OFFSET ?",
+        `SELECT restaurants.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM restaurants left join reviews ON(reviews.res_id=restaurants.id) WHERE restaurants.name LIKE '%${q}%' GROUP BY restaurants.id ORDER BY avg_rating DESC LIMIT ? OFFSET ?`,
         [limit, page * limit]
       );
       const restaurantIds = rows.map((row) => row.id);
