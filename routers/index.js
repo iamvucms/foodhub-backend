@@ -43,6 +43,7 @@ rootRouter.post("/api/data/suggest-products", controller.getSuggestProducts);
 //product addons
 rootRouter.post("/api/data/addons/:addOnId", controller.updateProductAddon);
 rootRouter.delete("/api/data/addons/:addOnId", controller.deleteProductAddon);
+rootRouter.post("/api/data/addons", controller.createProductAddons);
 //restaurant
 rootRouter.get("/api/data/restaurants", controller.getRestaurants);
 rootRouter.get(

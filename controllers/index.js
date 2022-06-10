@@ -315,8 +315,10 @@ module.exports = {
         throw new Error("Missing required fields");
       }
       const updated = await Product.updateProduct({ product, productId });
+      const updatedProduct = await Product.getProductById(productId);
       res.json({
         success: updated,
+        data: updatedProduct,
       });
     } catch (e) {
       res.json({
@@ -486,6 +488,23 @@ module.exports = {
     }
   },
   //production addon controllers
+  createProductAddons: async function (req, res) {
+    try {
+      const { productId, addons } = req.body;
+      const created = await ProductAddons.createProductAddons({
+        productId,
+        addons,
+      });
+      res.json({
+        success: created,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
   updateProductAddon: async function (req, res) {
     try {
       const { addOnId } = req.params;

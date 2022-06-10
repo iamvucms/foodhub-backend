@@ -291,6 +291,7 @@ module.exports.Product = {
         "UPDATE products SET " + dataString.join(", ") + " WHERE id = ?",
         [...data, productId]
       );
+      return true;
     } catch (e) {
       console.log(e);
       throw new Error("Something went wrong");
