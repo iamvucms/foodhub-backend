@@ -32,7 +32,7 @@ module.exports.Order = {
       );
       const orderIds = orders.map((row) => row.id).join(",");
       const orderDetails = await Database.all(
-        "SELECT order_product_details.*,products.name,products.image FROM order_product_details inner join products ON(order_product_details.product_id=products.id) WHERE order_id IN(" +
+        "SELECT order_product_details.*,products.name,products.image,products.cat_id,products.res_id FROM order_product_details inner join products ON(order_product_details.product_id=products.id) WHERE order_id IN(" +
           orderIds +
           ")"
       );

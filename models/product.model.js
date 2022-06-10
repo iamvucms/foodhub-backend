@@ -200,7 +200,7 @@ module.exports.Product = {
             return reject("Something went wrong");
           }
           if (row) {
-            ProductAddons.getProductAddonsByProductId(productId)
+            ProductAddons.getProductAddonsByProductId(row.id)
               .then((options) => {
                 row.options = options;
                 resolve(row);

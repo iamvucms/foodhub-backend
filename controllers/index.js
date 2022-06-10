@@ -433,12 +433,13 @@ module.exports = {
       if (Object.keys(restaurant).length === 0) {
         throw new Error("Missing required fields");
       }
-      const updated = await Restaurant.updateRestaurant({
+      const updatedRestaurant = await Restaurant.updateRestaurant({
         restaurant,
         restaurantId,
       });
       res.json({
-        success: updated,
+        success: true,
+        data: updatedRestaurant,
       });
     } catch (e) {
       res.json({
@@ -526,7 +527,7 @@ module.exports = {
       res.json({
         success: true,
         data: {
-          uri: `http://localhost:3000/uploads/${req.file.filename}`,
+          uri: `http://${process.env.PRIVATE_IP}:3000/uploads/${req.file.filename}`,
         },
       });
     } catch (e) {

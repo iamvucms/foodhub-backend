@@ -133,7 +133,17 @@ module.exports.Restaurant = {
             console.log({ err });
             return reject("Something went wrong");
           }
-          resolve(true);
+          db.get(
+            `SELECT restaurants.*,avg(rating) as avg_rating,count(reviews.id) as total_reviews FROM restaurants left join reviews ON(reviews.res_id=restaurants.id) WHERE restaurants.id=? GROUP BY restaurants.id `,
+            [restaurantId],
+            function (err, row) {
+              if (err) {
+                console.log({ err });
+                return reject("Something went wrong");
+              }
+              resolve(row);
+            }
+          );
         }
       );
     });
