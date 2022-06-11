@@ -58,7 +58,7 @@ module.exports.Restaurant = {
                 resolve(row);
               }
             );
-          } else reject();
+          } else resolve(undefined);
         }
       );
     });

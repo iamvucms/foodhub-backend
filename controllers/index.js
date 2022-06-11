@@ -16,29 +16,37 @@ module.exports = {
     res.send(req.user);
   },
   authenticate: async function (req, res) {
-    const { emailOrPhone, password } = req.body || {};
-    const user = await User.getUser(emailOrPhone, password);
-    if (user) {
-      const restaurant = await Restaurant.getRestaurantById(user.id);
-      const accessToken = generateAccessToken(emailOrPhone);
-      const refreshToken = generateAccessToken(emailOrPhone, true);
-      tokenList[refreshToken] = {
-        accessToken,
-      };
-      res.json({
-        success: true,
-        data: {
-          ...user,
-          user_id: user.id,
+    try {
+      const { emailOrPhone, password } = req.body || {};
+      const user = await User.getUser(emailOrPhone, password);
+      if (user) {
+        const restaurant = await Restaurant.getRestaurantByUserId(user.id);
+        const accessToken = generateAccessToken(emailOrPhone);
+        const refreshToken = generateAccessToken(emailOrPhone, true);
+        tokenList[refreshToken] = {
           accessToken,
-          refreshToken,
-          restaurant,
-        },
-      });
-    } else {
+        };
+        res.json({
+          success: true,
+          data: {
+            ...user,
+            user_id: user.id,
+            accessToken,
+            refreshToken,
+            restaurant,
+          },
+        });
+      } else {
+        res.json({
+          success: false,
+          error: "Invalid email or password",
+        });
+      }
+    } catch (e) {
+      console.log(e);
       res.json({
         success: false,
-        error: "Invalid email or password",
+        error: "Something went wrong",
       });
     }
   },
