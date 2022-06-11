@@ -393,6 +393,21 @@ module.exports = {
       });
     }
   },
+  getRestaurantUsers: async function (req, res) {
+    try {
+      const { restaurantId } = req.params;
+      const users = await User.getUsersByRestaurantId(restaurantId);
+      res.json({
+        success: true,
+        data: users,
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
+  },
   createRestaurant: async function (req, res) {
     try {
       const { ...restaurant } = req.body || {};
@@ -694,6 +709,7 @@ module.exports = {
       const { orderId } = req.params;
       const { ...order } = req.body || {};
       const userId = await User.emailToUserId(req.user.email);
+      const restaurantId = await User.emailToRestaurantId(req.user.email);
       if (Object.keys(order).length === 0) {
         throw new Error("Missing required fields");
       } else {
@@ -701,6 +717,7 @@ module.exports = {
           orderId,
           order,
           userId,
+          restaurantId,
         });
         res.json({
           success: updated,

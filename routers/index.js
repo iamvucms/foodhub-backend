@@ -54,7 +54,10 @@ rootRouter.get(
   "/api/data/restaurants/:restaurantId/products",
   controller.getRestaurantProducts
 );
-
+rootRouter.get(
+  "/api/data/restaurants/:restaurantId/users",
+  controller.getRestaurantUsers
+);
 rootRouter.post("/api/data/restaurants", controller.createRestaurant);
 rootRouter.post(
   "/api/data/restaurants/:restaurantId",

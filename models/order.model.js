@@ -78,7 +78,7 @@ module.exports.Order = {
   }) {
     try {
       const orders = await Database.all(
-        "SELECT orders.*,users.name as user_name,users.avatar as user_avatar FROM orders inner join users ON(orders.user_id=users.id) WHERE orders.res_id = ? ORDER BY orders.id DESC LIMIT ? OFFSET ?",
+        "SELECT orders.*,users.name as user_name,users.avatar as user_avatar FROM orders inner join users ON(orders.user_id=users.id) WHERE orders.res_id = ? ORDER BY orders.status_code ASC LIMIT ? OFFSET ?",
         [restaurantId, limit, page * limit]
       );
       const orderIds = orders.map((row) => row.id).join(",");
@@ -237,7 +237,7 @@ module.exports.Order = {
       throw new Error("Something went wrong");
     }
   },
-  updateOrder: async function ({ userId, orderId, order }) {
+  updateOrder: async function ({ userId, restaurantId, orderId, order }) {
     try {
       const data = [];
       const dataString = [];
@@ -251,8 +251,8 @@ module.exports.Order = {
       await Database.run(
         "UPDATE orders SET " +
           dataString.join(",") +
-          ",updated_at=? WHERE id = ? AND user_id = ?",
-        [...data, updatedAt, orderId, userId]
+          ",updated_at=? WHERE id = ? AND (user_id = ? OR res_id = ?)",
+        [...data, updatedAt, orderId, userId, restaurantId]
       );
       return true;
     } catch (e) {

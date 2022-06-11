@@ -1,6 +1,7 @@
 const db = require("./");
 const md5 = require("md5");
 const { Database } = require("../utils/query");
+const { OrderStatus } = require("../utils/constants");
 module.exports.User = {
   getUser: function (emailOrPhone, password) {
     return new Promise((resolve, reject) => {
@@ -118,6 +119,35 @@ module.exports.User = {
       await Database.run(query, data.concat([user_id]));
       const user = Database.get("SELECT * FROM users WHERE id = ?", [user_id]);
       return user;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Something went wrong");
+    }
+  },
+  getUsersByRestaurantId: async function (restaurantId) {
+    try {
+      const users = await Database.all(
+        `SELECT users.*, count(orders.id) as total_orders FROM users INNER JOIN orders ON users.id = orders.user_id WHERE orders.res_id = ? GROUP BY users.id`,
+        [restaurantId]
+      );
+      const extraInfors = await Database.all(
+        "SELECT user_id, SUM(total_price) as total_spent,count(id) as total_completed FROM orders WHERE res_id = ? AND status_code = ? GROUP BY user_id",
+        [restaurantId, OrderStatus.DELIVERED]
+      );
+      const customers = users
+        .map((user) => {
+          const extraInfo = extraInfors.find(
+            (extra) => extra.user_id === user.id
+          );
+          return {
+            ...user,
+            total_spent: extraInfo?.total_spent || 0,
+            total_orders: user.total_orders,
+            total_completed: extraInfo?.total_completed || 0,
+          };
+        })
+        .sort((a, b) => b.total_spent - a.total_spent);
+      return customers;
     } catch (e) {
       console.log(e);
       throw new Error("Something went wrong");
