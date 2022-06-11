@@ -267,8 +267,8 @@ module.exports.Product = {
           product.description,
           product.price,
           product.image,
-          product.res_id,
           product.cat_id,
+          product.res_id,
         ]
       );
       return true;

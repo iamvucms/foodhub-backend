@@ -66,7 +66,6 @@ module.exports = {
   },
   refreshToken: function (req, res) {
     const { emailOrPhone, refreshToken } = req.body || {};
-    console.log(refreshToken, emailOrPhone, tokenList);
     if (emailOrPhone && refreshToken in tokenList) {
       const accessToken = generateAccessToken(emailOrPhone);
       res.json({
@@ -561,7 +560,7 @@ module.exports = {
       res.json({
         success: true,
         data: {
-          uri: `http://${process.env.PRIVATE_IP}:3000/uploads/${req.file.filename}`,
+          uri: `http://${req.headers.host}/uploads/${req.file.filename}`,
         },
       });
     } catch (e) {
@@ -575,7 +574,7 @@ module.exports = {
   uploadMultiplePhotos: async function (req, res) {
     try {
       const data = req.files.map((file) => ({
-        uri: `http://localhost:3000/uploads/${file.filename}`,
+        uri: `http://${req.headers.host}/uploads/${file.filename}`,
       }));
       res.json({
         success: true,
@@ -710,6 +709,7 @@ module.exports = {
       const { ...order } = req.body || {};
       const userId = await User.emailToUserId(req.user.email);
       const restaurantId = await User.emailToRestaurantId(req.user.email);
+
       if (Object.keys(order).length === 0) {
         throw new Error("Missing required fields");
       } else {

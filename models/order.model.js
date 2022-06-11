@@ -23,7 +23,7 @@ module.exports.Order = {
   }) {
     try {
       const orders = await Database.all(
-        `SELECT orders.*,restaurants.name as restaurant_name,restaurants.logo as restaurant_logo FROM orders inner join restaurants ON(orders.res_id=restaurants.id) WHERE orders.user_id = ? AND status_code ${
+        `SELECT orders.*,restaurants.name as restaurant_name,restaurants.logo as restaurant_logo FROM orders inner join restaurants ON(orders.res_id=restaurants.id)  WHERE orders.user_id = ? AND status_code ${
           isHistory
             ? `>= ${OrderStatus.DELIVERED}`
             : `< ${OrderStatus.DELIVERED}`

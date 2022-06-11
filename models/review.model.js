@@ -4,7 +4,7 @@ module.exports.Review = {
   getReviewsByProductId: function ({ productId, limit = 10, page = 0 }) {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT * FROM reviews WHERE product_id = ? LIMIT ? OFFSET ?",
+        "SELECT reviews.*,name as reviewer_name,avatar as reviewer_avatar FROM reviews inner join users ON(reviews.reviewer_id=users.id) WHERE product_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ? ",
         [productId, limit, page * limit],
         function (err, rows) {
           if (err) {
