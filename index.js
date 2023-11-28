@@ -3,7 +3,7 @@ const app = express();
 const rootRouter = require("./routers/index.js");
 const dotenv = require("dotenv");
 dotenv.config();
-const port = 3000;
+const port = 80;
 app.use(express.json());
 app.use("/", rootRouter);
 

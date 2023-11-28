@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "nodemon index.js",
+    "pull": "git pull && yarn && forever restartall"
+  },
   "dependencies": {
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
