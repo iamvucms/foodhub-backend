@@ -3,7 +3,7 @@ const md5 = require("md5");
 const { Database } = require("../utils/query");
 const { OrderStatus } = require("../utils/constants");
 module.exports.User = {
-  getUser: function (emailOrPhone, password) {
+  getUser: function (emailOrPhone, password = "") {
     return new Promise((resolve, reject) => {
       db.get(
         "SELECT * FROM users WHERE emailOrPhone = ? AND password = ?",

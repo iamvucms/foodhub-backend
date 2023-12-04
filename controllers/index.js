@@ -10,6 +10,7 @@ const { ProductAddons } = require("../models/product_addons.model");
 const path = require("path");
 const fs = require("fs");
 const { Order } = require("../models/order.model");
+const { isEmail, isVietnamesePhoneNumber } = require("../utils/validation");
 const tokenList = {};
 module.exports = {
   index: function (req, res) {
@@ -18,11 +19,30 @@ module.exports = {
   authenticate: async function (req, res) {
     try {
       const { emailOrPhone, password } = req.body || {};
-      const user = await User.getUser(emailOrPhone, password);
+      if (!emailOrPhone) {
+        return res.status(400).json({
+          success: false,
+          error: "Email or phone is required",
+        });
+      }
+      if (!isEmail(emailOrPhone) && !isVietnamesePhoneNumber(emailOrPhone)) {
+        return res.status(422).json({
+          success: false,
+          error: "Email or phone is invalid format",
+        });
+      }
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          error: "Password is required",
+        });
+      }
+      const _emailOrPhone = emailOrPhone.trim().toLowerCase();
+      const user = await User.getUser(_emailOrPhone, password);
       if (user) {
         const restaurant = await Restaurant.getRestaurantByUserId(user.id);
-        const accessToken = generateAccessToken(emailOrPhone);
-        const refreshToken = generateAccessToken(emailOrPhone, true);
+        const accessToken = generateAccessToken(_emailOrPhone);
+        const refreshToken = generateAccessToken(_emailOrPhone, true);
         tokenList[refreshToken] = {
           accessToken,
         };
@@ -37,14 +57,13 @@ module.exports = {
           },
         });
       } else {
-        res.json({
+        res.status(400).json({
           success: false,
           error: "Invalid email or password",
         });
       }
     } catch (e) {
-      console.log("COME", e);
-      res.json({
+      res.status(400).json({
         success: false,
         error: "Something went wrong",
       });
