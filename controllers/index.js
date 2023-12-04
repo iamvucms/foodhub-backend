@@ -10,7 +10,11 @@ const { ProductAddons } = require("../models/product_addons.model");
 const path = require("path");
 const fs = require("fs");
 const { Order } = require("../models/order.model");
-const { isEmail, isVietnamesePhoneNumber } = require("../utils/validation");
+const {
+  isEmail,
+  isVietnamesePhoneNumber,
+  isPassword,
+} = require("../utils/validation");
 const tokenList = {};
 module.exports = {
   index: function (req, res) {
@@ -18,14 +22,15 @@ module.exports = {
   },
   authenticate: async function (req, res) {
     try {
-      const { emailOrPhone, password } = req.body || {};
-      if (!emailOrPhone) {
+      const { emailOrPhone = "", password } = req.body || {};
+      const _emailOrPhone = emailOrPhone.trim().toLowerCase();
+      if (!_emailOrPhone) {
         return res.status(400).json({
           success: false,
           error: "Email or phone is required",
         });
       }
-      if (!isEmail(emailOrPhone) && !isVietnamesePhoneNumber(emailOrPhone)) {
+      if (!isEmail(_emailOrPhone) && !isVietnamesePhoneNumber(_emailOrPhone)) {
         return res.status(422).json({
           success: false,
           error: "Email or phone is invalid format",
@@ -37,7 +42,7 @@ module.exports = {
           error: "Password is required",
         });
       }
-      const _emailOrPhone = emailOrPhone.trim().toLowerCase();
+
       const user = await User.getUser(_emailOrPhone, password);
       if (user) {
         const restaurant = await Restaurant.getRestaurantByUserId(user.id);
@@ -70,10 +75,47 @@ module.exports = {
     }
   },
   register: async function (req, res) {
-    const { emailOrPhone, password, name, avatar } = req.body || {};
+    const { emailOrPhone = "", password, name, avatar } = req.body || {};
     try {
-      const user = await User.addUser({ emailOrPhone, password, name, avatar });
-      const sentOTP = await OTP.createOTPForUser(user.id, emailOrPhone);
+      const _emailOrPhone = emailOrPhone.trim().toLowerCase();
+      if (!_emailOrPhone) {
+        return res.status(400).json({
+          success: false,
+          error: "Email or phone is required",
+        });
+      }
+      if (!isEmail(_emailOrPhone) && !isVietnamesePhoneNumber(_emailOrPhone)) {
+        return res.status(422).json({
+          success: false,
+          error: "Email or phone is invalid format",
+        });
+      }
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          error: "Password is required",
+        });
+      }
+      if (!isPassword(password)) {
+        return res.status(422).json({
+          success: false,
+          error: "Password is invalid format",
+        });
+      }
+      const existingUserId = await User.emailToUserId(_emailOrPhone, false);
+      if (typeof existingUserId === "number") {
+        return res.status(422).json({
+          success: false,
+          error: "Email or phone is already registered",
+        });
+      }
+      const user = await User.addUser({
+        emailOrPhone: _emailOrPhone,
+        password,
+        name,
+        avatar,
+      });
+      const sentOTP = await OTP.createOTPForUser(user.id, _emailOrPhone);
       if (sentOTP) {
         res.json({
           success: true,

@@ -18,7 +18,7 @@ module.exports.User = {
       );
     });
   },
-  emailToUserId: function (email) {
+  emailToUserId: function (email, shouldReject = true) {
     return new Promise((resolve, reject) => {
       db.get(
         "SELECT id FROM users WHERE emailOrPhone = ?",
@@ -30,7 +30,11 @@ module.exports.User = {
           if (row) {
             resolve(row.id);
           } else {
-            reject("User not found");
+            if (shouldReject) {
+              reject("User not found");
+            } else {
+              resolve(null);
+            }
           }
         }
       );
