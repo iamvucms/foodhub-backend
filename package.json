@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nodemon index.js",
-    "pull": "git pull && yarn && forever restartall"
+    "pull": "git reset --hard && git pull && yarn && forever restartall"
   },
   "dependencies": {
     "dotenv": "^16.0.0",
