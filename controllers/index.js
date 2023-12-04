@@ -19,8 +19,10 @@ module.exports = {
     try {
       const { emailOrPhone, password } = req.body || {};
       const user = await User.getUser(emailOrPhone, password);
+      console.log(user);
       if (user) {
         const restaurant = await Restaurant.getRestaurantByUserId(user.id);
+        console.log(restaurant);
         const accessToken = generateAccessToken(emailOrPhone);
         const refreshToken = generateAccessToken(emailOrPhone, true);
         tokenList[refreshToken] = {
@@ -43,7 +45,7 @@ module.exports = {
         });
       }
     } catch (e) {
-      console.log(e);
+      console.log("COME", e);
       res.json({
         success: false,
         error: "Something went wrong",
