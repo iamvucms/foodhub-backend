@@ -17,13 +17,10 @@ module.exports = {
   },
   authenticate: async function (req, res) {
     try {
-      console.log("JWT_SECRET", process.env.JWT_SECRET);
       const { emailOrPhone, password } = req.body || {};
       const user = await User.getUser(emailOrPhone, password);
-      console.log(user);
       if (user) {
         const restaurant = await Restaurant.getRestaurantByUserId(user.id);
-        console.log(restaurant);
         const accessToken = generateAccessToken(emailOrPhone);
         const refreshToken = generateAccessToken(emailOrPhone, true);
         tokenList[refreshToken] = {
