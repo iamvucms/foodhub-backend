@@ -6,7 +6,6 @@ function authenticateTokenMiddleware(req, res, next) {
   const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) return res.sendStatus(401);
-
   jwt.verify(token, process.env.JWT_SECRET, (err, email) => {
     if (err) {
       console.log(err);

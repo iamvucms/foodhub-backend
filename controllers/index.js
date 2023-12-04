@@ -17,6 +17,7 @@ module.exports = {
   },
   authenticate: async function (req, res) {
     try {
+      console.log("JWT_SECRET", process.env.JWT_SECRET);
       const { emailOrPhone, password } = req.body || {};
       const user = await User.getUser(emailOrPhone, password);
       console.log(user);
