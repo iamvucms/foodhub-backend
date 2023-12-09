@@ -20,8 +20,33 @@ const isPassword = (password) => {
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(.{8,})$/;
   return regex.test(password);
 };
+const isValidMediaUrl = (url, isVideo = false) => {
+  if (typeof url !== "string") {
+    return false;
+  }
+  const regex = isVideo
+    ? /(http|https):\/\/foodhub123\.me\/uploads\/.*\.(mp4|mov)/g
+    : /(http|https):\/\/foodhub123\.me\/uploads\/.*\.(jpeg|png|jpg)/g;
+  return regex.test(url);
+};
+const isValidName = (name) => {
+  if (typeof name !== "string") {
+    return false;
+  }
+  const regex = /^[a-zA-Z ]{5,}$/;
+  return regex.test(name.trim());
+};
+const isValidVerified = (verified) => {
+  if (typeof verified !== "boolean") {
+    return false;
+  }
+  return true;
+};
 module.exports = {
   isEmail,
   isVietnamesePhoneNumber,
   isPassword,
+  isValidMediaUrl,
+  isValidName,
+  isValidVerified,
 };

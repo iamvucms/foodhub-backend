@@ -13,7 +13,28 @@ module.exports.User = {
             console.log({ err });
             return reject();
           }
-          resolve(row);
+          resolve({
+            ...row,
+            verified: row.verified === 1,
+          });
+        }
+      );
+    });
+  },
+  getUserByEmailOrPhone: function (emailOrPhone) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM users WHERE emailOrPhone = ?",
+        [emailOrPhone],
+        function (err, row) {
+          if (err) {
+            console.log({ err });
+            return reject();
+          }
+          resolve({
+            ...row,
+            verified: row.verified === 1,
+          });
         }
       );
     });
@@ -93,7 +114,10 @@ module.exports.User = {
               console.log({ err });
               return reject(`Can't register with your information`);
             }
-            resolve(row);
+            resolve({
+              ...row,
+              verified: row.verified === 1,
+            });
           }
         );
       });
@@ -107,8 +131,8 @@ module.exports.User = {
         data.push(name);
         dataString.push("name = ?");
       }
-      if (verified) {
-        data.push(verified);
+      if (typeof verified === "boolean") {
+        data.push(verified ? 1 : 0);
         dataString.push("verified = ?");
       }
       if (avatar) {
@@ -121,8 +145,13 @@ module.exports.User = {
       }
       const query = `UPDATE users SET ${dataString.join(", ")} WHERE id = ?`;
       await Database.run(query, data.concat([user_id]));
-      const user = Database.get("SELECT * FROM users WHERE id = ?", [user_id]);
-      return user;
+      const user = await Database.get("SELECT * FROM users WHERE id = ?", [
+        user_id,
+      ]);
+      return {
+        ...user,
+        verified: user.verified === 1,
+      };
     } catch (e) {
       console.log(e);
       throw new Error("Something went wrong");

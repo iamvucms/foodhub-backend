@@ -40,6 +40,8 @@ module.exports.Product = {
               });
               const results = rows.map((x) => ({
                 ...x,
+                favorite: undefined,
+                avg_rating: x.avg_rating || 0,
                 options: addonJson[x.id] || [],
               }));
               resolve(results);

@@ -14,11 +14,30 @@ const {
   isEmail,
   isVietnamesePhoneNumber,
   isPassword,
+  isValidName,
+  isValidMediaUrl,
+  isValidVerified,
 } = require("../utils/validation");
 const tokenList = {};
 module.exports = {
-  index: function (req, res) {
-    res.send(req.user);
+  getUser: async function (req, res) {
+    try {
+      const userInfo = await User.getUserByEmailOrPhone(req.user.email);
+      const restaurant = await Restaurant.getRestaurantByUserId(userInfo.id);
+      res.json({
+        success: true,
+        data: {
+          ...userInfo,
+          user_id: userInfo.id,
+          restaurant,
+        },
+      });
+    } catch (e) {
+      res.json({
+        success: false,
+        error: e,
+      });
+    }
   },
   authenticate: async function (req, res) {
     try {
@@ -99,7 +118,33 @@ module.exports = {
       if (!isPassword(password)) {
         return res.status(422).json({
           success: false,
-          error: "Password is invalid format",
+          error:
+            "Password must be at least 8 characters and contain both special characters, numbers and letters",
+        });
+      }
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          error: "Name is required",
+        });
+      }
+      if (!isValidName(name)) {
+        return res.status(422).json({
+          success: false,
+          error:
+            "Name length must be at least 5 characters and not contain special characters",
+        });
+      }
+      if (!avatar) {
+        return res.status(400).json({
+          success: false,
+          error: "Avatar is required",
+        });
+      }
+      if (!isValidMediaUrl(avatar)) {
+        return res.status(422).json({
+          success: false,
+          error: "Avatar is invalid format",
         });
       }
       const existingUserId = await User.emailToUserId(_emailOrPhone, false);
@@ -183,13 +228,40 @@ module.exports = {
   },
   updateUser: async function (req, res) {
     try {
-      const { name, avatar, password } = req.body || {};
+      const { name, avatar, password, verified } = req.body || {};
+      if (password && !isPassword(password)) {
+        return res.status(422).json({
+          success: false,
+          error:
+            "Password must be at least 8 characters and contain both special characters, numbers and letters",
+        });
+      }
+      if (name && !isValidName(name)) {
+        return res.status(422).json({
+          success: false,
+          error:
+            "Name length must be at least 5 characters and not contain special characters or digits",
+        });
+      }
+      if (avatar && !isValidMediaUrl(avatar)) {
+        return res.status(422).json({
+          success: false,
+          error: "Avatar is invalid format",
+        });
+      }
+      if (verified !== undefined && !isValidVerified(verified)) {
+        return res.status(422).json({
+          success: false,
+          error: "Verified must be true or false",
+        });
+      }
       const userId = await User.emailToUserId(req.user.email);
       const user = await User.updateUser({
         user_id: userId,
         name,
         avatar,
         password,
+        verified,
       });
       res.json({
         success: true,
@@ -265,6 +337,23 @@ module.exports = {
     try {
       const userId = await User.emailToUserId(req.user.email);
       const addressId = req.params.addressId;
+      const isExist = await Address.checkExistAddress(addressId);
+      if (!isExist) {
+        return res.status(422).json({
+          success: false,
+          error: "Address not found",
+        });
+      }
+      const isOwner = await Address.getIsOwner({
+        address_id: addressId,
+        user_id: userId,
+      });
+      if (!isOwner) {
+        return res.status(403).json({
+          success: false,
+          error: "You are not owner of this address",
+        });
+      }
       const deleted = await Address.deleteAddress({
         address_id: addressId,
         user_id: userId,

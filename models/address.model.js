@@ -119,6 +119,30 @@ module.exports.Address = {
       });
     });
   },
+  checkExistAddress: async function (address_id) {
+    try {
+      const address = await Database.get(
+        "SELECT * FROM addresses WHERE id = ?",
+        [address_id]
+      );
+      return address ? true : false;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
+  },
+  getIsOwner: async function ({ address_id, user_id }) {
+    try {
+      const address = await Database.get(
+        "SELECT * FROM addresses WHERE id = ? AND user_id = ?",
+        [address_id, user_id]
+      );
+      return address ? true : false;
+    } catch (e) {
+      console.log({ e });
+      throw new Error("Something went wrong");
+    }
+  },
   deleteAddress: async function ({ address_id, user_id }) {
     try {
       await Database.run("DELETE FROM addresses WHERE id = ?", [address_id]);

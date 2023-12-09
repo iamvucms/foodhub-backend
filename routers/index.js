@@ -24,7 +24,7 @@ rootRouter.post("/api/auth/refresh-token", controller.refreshToken);
 rootRouter.post("/api/auth/verify-otp", controller.verifyOTP);
 
 rootRouter.use("/api/data", authenticateTokenMiddleware);
-rootRouter.get("/api/data", controller.index);
+rootRouter.get("/api/data/user", controller.getUser);
 //user
 rootRouter.post("/api/data/user", controller.updateUser);
 //address
