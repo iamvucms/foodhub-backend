@@ -83,7 +83,7 @@ module.exports = {
       } else {
         res.status(400).json({
           success: false,
-          error: "Invalid email or password",
+          error: "Email or password is incorrect",
         });
       }
     } catch (e) {
