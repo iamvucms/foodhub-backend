@@ -18,6 +18,7 @@ module.exports.User = {
               ? {
                   ...row,
                   verified: row.verified === 1,
+                  password: undefined,
                 }
               : row
           );
