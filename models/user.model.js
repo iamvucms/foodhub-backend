@@ -40,6 +40,7 @@ module.exports.User = {
               ? {
                   ...row,
                   verified: row.verified === 1,
+                  password: undefined,
                 }
               : row
           );
@@ -96,7 +97,15 @@ module.exports.User = {
             console.log({ err });
             return reject();
           }
-          resolve(row);
+          resolve(
+            row
+              ? {
+                  ...row,
+                  verified: row.verified === 1,
+                  password: undefined,
+                }
+              : row
+          );
         }
       );
     });
@@ -127,6 +136,7 @@ module.exports.User = {
                 ? {
                     ...row,
                     verified: row.verified === 1,
+                    password: undefined,
                   }
                 : row
             );
@@ -164,6 +174,7 @@ module.exports.User = {
         ? {
             ...user,
             verified: user.verified === 1,
+            password: undefined,
           }
         : user;
     } catch (e) {
