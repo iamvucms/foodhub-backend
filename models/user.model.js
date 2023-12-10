@@ -13,10 +13,14 @@ module.exports.User = {
             console.log({ err });
             return reject();
           }
-          resolve({
-            ...row,
-            verified: row.verified === 1,
-          });
+          resolve(
+            row
+              ? {
+                  ...row,
+                  verified: row.verified === 1,
+                }
+              : row
+          );
         }
       );
     });
@@ -31,10 +35,14 @@ module.exports.User = {
             console.log({ err });
             return reject();
           }
-          resolve({
-            ...row,
-            verified: row.verified === 1,
-          });
+          resolve(
+            row
+              ? {
+                  ...row,
+                  verified: row.verified === 1,
+                }
+              : row
+          );
         }
       );
     });
@@ -114,10 +122,14 @@ module.exports.User = {
               console.log({ err });
               return reject(`Can't register with your information`);
             }
-            resolve({
-              ...row,
-              verified: row.verified === 1,
-            });
+            resolve(
+              row
+                ? {
+                    ...row,
+                    verified: row.verified === 1,
+                  }
+                : row
+            );
           }
         );
       });
@@ -148,10 +160,12 @@ module.exports.User = {
       const user = await Database.get("SELECT * FROM users WHERE id = ?", [
         user_id,
       ]);
-      return {
-        ...user,
-        verified: user.verified === 1,
-      };
+      return user
+        ? {
+            ...user,
+            verified: user.verified === 1,
+          }
+        : user;
     } catch (e) {
       console.log(e);
       throw new Error("Something went wrong");

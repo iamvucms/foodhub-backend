@@ -109,10 +109,14 @@ module.exports.Restaurant = {
             console.log({ err });
             return reject("Something went wrong");
           }
-          resolve({
-            ...row,
-            verified: row.verified === 1,
-          });
+          resolve(
+            row
+              ? {
+                  ...row,
+                  verified: row.verified === 1,
+                }
+              : row
+          );
         }
       );
     });
